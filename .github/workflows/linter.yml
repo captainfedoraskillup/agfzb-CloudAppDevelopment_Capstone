@@ -1,51 +1,66 @@
----
-#################################
-#################################
-## Super Linter GitHub Actions ##
-#################################
-#################################
-name: Lint Code Base
+name: 'Lint Code'
 
-#############################
-# Start the job on all push #
-#############################
 on:
+  workflow_dispatch:
   push:
     branches: [master, main]
-    # Remove the line above to run when pushing to master
   pull_request:
     branches: [master, main]
 
-###############
-# Set the Job #
-###############
-jobs:
-  build:
-    # Name the Job
-    name: Lint Code Base
-    # Set the agent to run on
-    runs-on: ubuntu-latest
-
-    ##################
-    # Load all steps #
-    ##################
-    steps:
-      ##########################
-      # Checkout the code base #
-      ##########################
-      - name: Checkout Code
-        uses: actions/checkout@v3
+jobs: # list of things to do
+  lint_function_js:
+    name: Linting JavaScript Function 
+    runs-on: ubuntu-latest 
+    steps: # list of steps
+      - name: Install NodeJS
+        uses: actions/setup-node@v3
         with:
-          # Full git history is needed to get a proper
-          # list of changed files within `super-linter`
-          fetch-depth: 0
+          node-version: 16
 
-      ################################
-      # Run Linter against code base #
-      ################################
-      - name: Lint Code Base
-        uses: github/super-linter@v4
-        env:
-          VALIDATE_ALL_CODEBASE: false
-          DEFAULT_BRANCH: master
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Code Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: npm install
+        working-directory: functions/sample/nodejs
+
+      - name: Code Linting
+        run: npm run lint
+        working-directory: functions/sample/nodejs
+    
+
+  lint_function_python:
+    name: Linting Python Function 
+    runs-on: ubuntu-latest 
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Lint with Pylint
+        run: pylint *.py
+        working-directory: functions/sample/python
+
+  lint_django_server:
+    name: Linting Django Server 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Lint with Pylint
+        run: pylint *.py
+        working-directory: server
